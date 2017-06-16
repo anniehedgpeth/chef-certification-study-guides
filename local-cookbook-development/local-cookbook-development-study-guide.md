@@ -1,5 +1,5 @@
 # LOCAL COOKBOOK DEVELOPMENT BADGE TOPICS
-_This page is for the purpose of studying for this exam. Most of the information found on this page is taken from [docs.chef.io](https://docs.chef.io). 
+_This page is for the purpose of studying for this exam. Most of the information found on this page is taken from [docs.chef.io](https://docs.chef.io)._
 
 The Local Cookbook Development badge is awarded when someone proves that they understand the process of developing cookbooks locally. Candidates must show:
 
