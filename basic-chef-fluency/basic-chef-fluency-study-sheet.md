@@ -48,7 +48,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 - To include another recipe within a recipe, one must first make the cookbook dependent upon that recipe within the metadata of that cookbook. Then you may use the `include_recipe` resource within the recipe to actually execute that dependent recipe.
 
 ### What happens if a recipe is included multiple times in a run_list
-- The node will be idempotent, so as the recipe runs a subsequent time, it will again test and repair.
+-If a recipe appears more than once in the run-list, the chef-client will not run it twice.
 
 ### The `notifies` and `subscribes` directives
 - A resource can notify another resource of its actions in order for the secondary resource to take action based upon the primary resource's actions. Conversely, a resource can subscribe to another resource to listen for its actions and take action itself based on the actions of the resource to which is it subscribed.
