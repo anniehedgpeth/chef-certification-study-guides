@@ -1326,3 +1326,14 @@ end
 # search data bags (see above for more)
 search(:admin_data, "NOT id:admin_users")
 ```
+
+# Notes from Exam's Lab
+ - How to install 'IIS-WebServerRole' Windows Feature
+ - How to install Windows Registry Keys (recursive true)
+ - How to create a file with content and create the recursive directories
+
+# Notes about the Exam experience
+ - There is not a visible timer, so you have to chat with the proctor to ask how much time is left.
+ - You may not use the restroom or else you forfeit the remainder of your time.
+ - The setup may take a while since they have to scan your room and workspace.
+ - If your internet connection is interrupted, they will give you the lost time, however, this is not ideal, because it makes you frantic and you can't go to the bathroom.
