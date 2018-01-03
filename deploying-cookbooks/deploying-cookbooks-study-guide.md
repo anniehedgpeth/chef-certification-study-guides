@@ -47,35 +47,93 @@ _Candidates should understand:_
 _The chef-client processes recipes in two phases:_
 
 _First, each resource in the node object is identified and a resource collection is built. All recipes are loaded in a specific order, and then the actions specified within each of them are identified. This is also referred to as the “compile phase”._
+
 _Next, the chef-client configures the system based on the order of the resources in the resource collection. Each resource is mapped to a provider, which then examines the node and performs the necessary steps to complete the action. This is also referred to as the “execution phase”._
+
 _Typically, actions are processed during the execution phase of the chef-client run. However, sometimes it is necessary to run an action during the compile phase. For example, a resource can be configured to install a package during the compile phase to ensure that application is available to other resources during the execution phase._
 
 > Note: Use the chef_gem resource to install gems that are needed by the chef-client during the execution phase.
 
  - What happens when you place some Ruby at the start of a recipe?
+
+_It is compiled during the compile phase._
+
  - What happens when you place some Ruby at the end of a recipe?
+ 
+_It is compiled during the compile phase._
+
  - When are attributes evaluated?
+
+_during the compile phase_
+
  - What happens during a 'node.save' operation?"
+
+_It sends the node object details to the Chef server._
+
+> per https://discourse.chef.io/t/node-save/2080/8
+`node.save?` _is used explicitly when information must be saved, even if the chef run fails. Otherwise, default is for the node information to be given to the Chef server after a successful chef-client run._
+
+_A good example is when a random password (e.g. for MySQL) has been generated and applied to the database. If you don’t call node.save and the run fails, then the next run will generate a new password which doesn’t match the password in the database so access to the database will fail._
+
+_By calling `node.save` right after generating the password but before applying it to the database, you ensure that even when the chef run fails later on, the same password will be used in subsequent chef runs._
+
+_Chef doesn't save the node when the run fails because, by default, Chef would have no way of knowing whether that is a desirable thing to do. There may be something in your recipes that you wouldn’t want saved until the full convergence finished._
 
 ## RUN_STATUS
 _Candidates should understand:_
  - How can you tap into the chef-client run?
+
+https://docs.chef.io/handlers.html#run-status-object
+_Use a handler to identify situations that arise during a chef-client run, and then tell the chef-client how to handle these situations when they occur._
+
  - What is ‘run_status’?
+
+_Tracks various aspects of a Chef run, including the Node and RunContext, start and end time, and any Exception that stops the run. RunStatus objects are passed to any notification or exception handlers at the completion of a Chef run._
+_The run_status object is initialized by the chef-client before the report interface is run for any handler. The run_status object keeps track of the status of the chef-client run and will contain some (or all) of the following properties:_
+
+```
+all_resources
+backtrace
+elapsed_time
+end_time
+exception
+failed?
+node
+run_context
+start_time
+success?
+updated_resources
+```
+
  - What is ‘run_state’?
+
+_The start of the chef-client run_
+
  - What is the ‘resource collection’?
+
+_During the compile phase of the `chef-client` run, when it is loading all of the cookbooks, all of the resources are compiled and set to run in order._
 
 ## AUTHENTICATION
 _Candidates should understand:_
- - Deploying Cookbooks Page 2 v1.0
  - How does the chef-client authenticate with the Chef Server?
+
+_A client is an actor that has permission to access the Chef server. A client is most often a node (on which the chef-client runs), but is also a workstation (on which knife runs), or some other machine that is configured to use the Chef server API. Each request to the Chef server that is made by a client uses a private key for authentication that must be authorized by the public key on the Chef server._
+
  - Authentication and using NTP
+
+_In some cases, the chef-client may receive a 401 response to the authentication request and a 403 response to an authorization request. If the authentication is happening on the node, NTP may be a cause. The system clock has drifted from the actual time by more than 15 minutes. This can be fixed by syncing the clock with an Network Time Protocol (NTP) server._
 
 ## CHEF COMPILE PHASE
 _Candidates should understand:_
  - Do all cookbooks always get downloaded?
+
+_No, they get synchronized. The chef-client asks the Chef server for a list of all cookbook files (including recipes, templates, resources, providers, attributes, libraries, and definitions) that will be required to do every action identified in the run-list for the rebuilt node object. The Chef server provides to the chef-client a list of all of those files. The chef-client compares this list to the cookbook files cached on the node (from previous chef-client runs), and then downloads a copy of every file that has changed since the previous chef-client run, along with any new files._
+
  - What about dependencies, and their dependencies?
- - What order do the following get loaded - libraries, attributes, resources/providers, 
- - definitions, recipes?
+
+_When a chef-client is run, it will perform all of the steps that are required to bring the node into the expected state, including synchronizing cookbooks and compiling the resource collection by loading each of the required cookbooks, including recipes, attributes, and all other dependencies._
+
+ - What order do the following get loaded - libraries, attributes, resources/providers, definitions, recipes?
 
 ## CONVERGENCE
 _Candidates should understand:_
@@ -174,7 +232,6 @@ _Candidates should understand:_
  - Overriding Role attributes
  - Syntax for setting cookbook constraints.
  - How would you allow only patch updates to a cookbook within an environment?
- - Deploying Cookbooks Page 3 v1.0
 
 ## SETTING AND VIEWING ENVIRONMENTS
 _Candidates should understand:_
@@ -214,7 +271,6 @@ _Candidates should understand:_
  - Listing nodes
  - View role details
  - Using Roles within a search
- - Deploying Cookbooks Page 4 v1.0
 
 # UPLOADING COOKBOOKS TO CHEF SERVER 
 
@@ -257,7 +313,6 @@ _Candidates should understand:_
  - What is ‘knife block’ plugin?
  - What is ‘knife spork’ plugin?
  - Installing knife plugins
- - Deploying Cookbooks Page 5 v1.0
 
 ## TROUBLESHOOTING
 _Candidates should understand:_
@@ -300,7 +355,6 @@ _Candidates should understand:_
  - Policy file use cases?
  - What can/not be configured in a policy file?
  - Policy files and Chef Workflow
- - Deploying Cookbooks Page 6 v1.0
 
 # SEARCH 
 
@@ -343,7 +397,6 @@ _Candidates should understand:_
 
 ## DATA_BAG ENCRYPTION
 _Candidates should understand:_
- - Deploying Cookbooks Page 7 v1.0
  - How do you encrypt a data_bag
  - What is Chef Vault
 
