@@ -11,8 +11,10 @@ Otherwise, study up on the concepts listed in the [guide](https://github.com/ann
  - How to install Windows Registry Keys (recursive true)
  - How to create a file with content and create the recursive directories
 
-# Notes about the Exam experience
- - There is not a visible timer, so you have to chat with the proctor to ask how much time is left.
+# Notes about my Exam experience
+ - There was not a visible timer, so you have to chat with the proctor to ask how much time is left, which wastes time.
+ - If your internet connection is interrupted (mine was 6 times), they will give you the lost time, however, this is not ideal, because it makes you frantic and you can't go to the bathroom.
  - You may not use the restroom or else you forfeit the remainder of your time.
- - The setup may take a while since they have to scan your room and workspace.
- - If your internet connection is interrupted, they will give you the lost time, however, this is not ideal, because it makes you frantic and you can't go to the bathroom.
+ - The setup may take a while since they have to scan your room and workspace, so plan accordingly.
+ - The language of the questions is unnecessarily complicated. I had to reread some of them over and over only to find out it was a simple question with very confusing wording.
+ - The Windows lab will require that you make 10 InSpec tests pass with the recipe. The requirements are very Windows specific (see above for examples).

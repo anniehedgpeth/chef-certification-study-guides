@@ -23,12 +23,35 @@ Here is a detailed breakdown of each area.
 ## CHEF-CLIENT OPERATION
 _Candidates should understand:_
  - chef-client modes of operation
+` -z`, `--local-mode`
+Run the chef-client in local mode. This allows all commands that work against the Chef server to also work against the local chef-repo.
+
  - Configuring chef-client 
+
+_A sample client.rb file that contains the most simple way to connect to https://manage.chef.io:_
+
+```
+log_level        :info
+log_location     STDOUT
+chef_server_url  'https://api.chef.io/organizations/<orgname>'
+validation_client_name '<orgname>-validator'
+validation_key '/etc/chef/validator.pem'
+client_key '/etc/chef/client.pem'
+```
 
 ## COMPILE VS EXECUTE
 _Candidates should understand:_
  - What happens during the 'compile' phase?
  - What happens during the 'execute' phase?
+
+_The chef-client processes recipes in two phases:_
+
+_First, each resource in the node object is identified and a resource collection is built. All recipes are loaded in a specific order, and then the actions specified within each of them are identified. This is also referred to as the “compile phase”._
+_Next, the chef-client configures the system based on the order of the resources in the resource collection. Each resource is mapped to a provider, which then examines the node and performs the necessary steps to complete the action. This is also referred to as the “execution phase”._
+_Typically, actions are processed during the execution phase of the chef-client run. However, sometimes it is necessary to run an action during the compile phase. For example, a resource can be configured to install a package during the compile phase to ensure that application is available to other resources during the execution phase._
+
+> Note: Use the chef_gem resource to install gems that are needed by the chef-client during the execution phase.
+
  - What happens when you place some Ruby at the start of a recipe?
  - What happens when you place some Ruby at the end of a recipe?
  - When are attributes evaluated?
@@ -64,21 +87,86 @@ _Candidates should understand:_
 
 ## WHY-RUN
 _Candidates should understand:_
- - What is the purpose of ‘why-run’
+ - What is the purpose of `why-run`
+
+` -W`, `--why-run`
+Use why-run mode to understand why the chef-client makes the decisions that it makes and to learn more about the current and proposed state of the system.
+
  - How do you invoke a ‘why-run’
+
+`chef-client -W` `chef-client --why-run`
+
  - What are limitations of doing a why run?
+
+A type of `chef-client` run that does everything except modify the system
 
 # ENVIRONMENTS 
 
 ## WHAT IS AN ENVIRONMENT/USE CASES
 _Candidates should understand:_
  - What is the purpose of an Environments?
+
+_An environment is a way to map an organization’s real-life workflow to what can be configured and managed when using Chef server.  Additional environments can be created to reflect each organization’s patterns and workflow. For example, creating production, staging, testing, and development environments. Generally, an environment is also associated with one (or more) cookbook versions._
+
  - What is the '_default' environment?
+
+_Every organization begins with a single environment called the _default environment, which cannot be modified (or deleted)._
+
  - What information can be specified in an Environment?
+
+_cookbook, description, name, default attributes, override attributes, cookbook versions_
+
  - What happens if you do not specify an Environment?
+
+_It defaults to using `_default` environment._
+
  - Creating environments in Ruby
+
+_A Ruby file for each non-default environment must exist in the environments/ subdirectory of the chef-repo. (If the chef-repo does not have this subdirectory, then it should be created.) The complete environment has the following syntax:_
+```
+name 'environment_name'
+description 'environment_description'
+cookbook OR cookbook_versions  'cookbook' OR 'cookbook' => 'cookbook_version'
+default_attributes 'node' => { 'attribute' => [ 'value', 'value', 'etc.' ] }
+override_attributes 'node' => { 'attribute' => [ 'value', 'value', 'etc.' ] }
+```
  - Creating environments in JSON
+
+_The JSON format for environments maps directly to the domain-specific Ruby format: the same settings, attributes, and values, and a similar structure and organization, just formatted as JSON. When an environment is defined as JSON the file that contains that data must be defined as a file that ends with .json. For example:_
+```
+{
+  "name": "dev",
+  "default_attributes": {
+    "apache2": {
+      "listen_ports": [
+        "80",
+        "443"
+      ]
+    }
+  },
+  "json_class": "Chef::Environment",
+  "description": "",
+  "cookbook_versions": {
+    "couchdb": "= 11.0.0"
+  },
+  "chef_type": "environment"
+}
+```
+_The JSON format has two additional settings:_
+`chef_type`	_Always set this to environment. Use this setting for any custom process that consumes environment objects outside of Ruby._
+`json_class`	_Always set this to Chef::Environment. The chef-client uses this setting to auto-inflate an environment object. If objects are being rebuilt outside of Ruby, ignore it._
+
  - Using environments within a search
+
+_When searching, an environment is an attribute._
+```knife search node "chef_environment:QA AND platform:centos"```
+
+_Or in a recipe_
+```qa_nodes = search(:node,"chef_environment:QA")
+qa_nodes.each do |qa_node|
+    # Do useful work specific to qa nodes only
+end
+```
 
 ## ATTRIBUTE PRECEDENCE AND COOKBOOK CONSTRAINTS
 _Candidates should understand:_
