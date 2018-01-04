@@ -40,10 +40,6 @@ client_key '/etc/chef/client.pem'
 ```
 
 ## COMPILE VS EXECUTE
-_Candidates should understand:_
- - What happens during the 'compile' phase?
- - What happens during the 'execute' phase?
-
 _The chef-client processes recipes in two phases:_
 
 _First, each resource in the node object is identified and a resource collection is built. All recipes are loaded in a specific order, and then the actions specified within each of them are identified. This is also referred to as the “compile phase”._
@@ -53,6 +49,16 @@ _Next, the chef-client configures the system based on the order of the resources
 _Typically, actions are processed during the execution phase of the chef-client run. However, sometimes it is necessary to run an action during the compile phase. For example, a resource can be configured to install a package during the compile phase to ensure that application is available to other resources during the execution phase._
 
 > Note: Use the chef_gem resource to install gems that are needed by the chef-client during the execution phase.
+
+_Candidates should understand:_
+ - What happens during the 'compile' phase?
+
+_The chef-client identifies each resource in the node object and builds the resource collection. Libraries are loaded first to ensure that all language extensions and Ruby classes are available to all resources. Next, attributes are loaded, followed by lightweight resources, and then all definitions (to ensure that any pseudo-resources within definitions are available). Finally, all recipes are loaded in the order specified by the expanded run-list. This is also referred to as the “compile phase”._
+
+ - What happens during the 'execute' phase?
+
+_The chef-client configures the system based on the information that has been collected. Each resource is executed in the order identified by the run-list, and then by the order in which each resource is listed in each recipe. Each resource in the resource collection is mapped to a provider. The provider examines the node, and then does the steps necessary to complete the action. And then the next resource is processed. Each action configures a specific part of the system. This process is also referred to as convergence. This is also referred to as the “execution phase”._
+
 
  - What happens when you place some Ruby at the start of a recipe?
 
@@ -124,6 +130,7 @@ _A client is an actor that has permission to access the Chef server. A client is
 _In some cases, the chef-client may receive a 401 response to the authentication request and a 403 response to an authorization request. If the authentication is happening on the node, NTP may be a cause. The system clock has drifted from the actual time by more than 15 minutes. This can be fixed by syncing the clock with an Network Time Protocol (NTP) server._
 
 ## CHEF COMPILE PHASE
+https://docs.chef.io/chef_client_overview.html
 _Candidates should understand:_
  - Do all cookbooks always get downloaded?
 
@@ -135,13 +142,35 @@ _When a chef-client is run, it will perform all of the steps that are required t
 
  - What order do the following get loaded - libraries, attributes, resources/providers, definitions, recipes?
 
+```
+attributes
+resources/providers
+libraries
+definitions
+recipes
+```
+
 ## CONVERGENCE
 _Candidates should understand:_
  - What happens during the execute phase of the chef-client run?
+
+_The chef-client configures the system based on the information that has been collected. Each resource is executed in the order identified by the run-list, and then by the order in which each resource is listed in each recipe. Each resource in the resource collection is mapped to a provider. The provider examines the node, and then does the steps necessary to complete the action. And then the next resource is processed. Each action configures a specific part of the system. This process is also referred to as convergence. This is also referred to as the “execution phase”._
+
  - The test/repair model
+
+_Chef-client "tests" the node to see if it is in the desired state as defined by the compilation of resources. If it is not, then it is "repaired" to be in that desired state._
+
  - When do notifications get invoked?
+
+_During resource collection - A notification is a property on a resource that listens to other resources in the resource collection and then takes actions based on the notification type (notifies or subscribes)._
+
  - What happens if there are multiple start notifications for a particular resource?
+
+_It is started the first time and is tested for being started each additional time but not restarted._
+
  - When is node data sent to the Chef Server?
+
+_after a successful chef-client run unless explicitly told to send it sooner by using_ `node.save?`
 
 ## WHY-RUN
 _Candidates should understand:_
@@ -361,29 +390,143 @@ _Candidates should understand:_
 ## BASIC SEARCH USAGE 
 _Candidates should understand:_
  - What information is indexed and available for search?
+
+_- client_
+_- environment_
+_- node_
+_- role_
+_- data bag_
+
  - Search operators and query syntax
+
+_A search query is comprised of two parts: the key and the search pattern. A search query has the following syntax:_ `key:search_pattern`
+_where key is a field name that is found in the JSON description of an indexable object on the Chef server (a role, node, client, environment, or data bag) and search_pattern defines what will be searched for, using one of the following search patterns: exact, wildcard, range, or fuzzy matching. Both key and search_pattern are case-sensitive; key has limited support for multiple character wildcard matching using an asterisk (“*”) (and as long as it is not the first character)._
+
+```
+knife search INDEX SEARCH_QUERY
+```
+_defaults to search for node_
+```
+knife search '*:*' -i
+```
+_is the same as_
+```
+$ knife search node '*:*' -i
+```
+
  - Wildcards, range and fuzzy matching
+
+_- To search for any node that contains the specified key, enter the following:_ `knife search node 'foo:*'`
+_- To search using an inclusive range, enter the following:_ `knife search sample "id:[bar TO foo]"`
+_- To use a fuzzy search pattern enter something similar to:_ `knife search client "name:boo~"`
+
 
 ## SEARCH USING KNIFE AND IN A RECIPE
 _Candidates should understand:_
  - Knife command line search syntax
+
+```
+knife search INDEX SEARCH_QUERY
+```
+
  - Recipe search syntax
+
+`search(:node, "key:attribute")`
+
 
 ## FILTERING RESULTS 
 _Candidates should understand:_
  - How do you filter on Chef Server
+
+_Use `:filter_result` as part of a search query to filter the search output based on the pattern specified by a Hash. Only attributes in the Hash will be returned._
+
+_The syntax for the search method that uses :filter_result is as follows:_
+```
+search(:index, 'query',
+  :filter_result => { 'foo' => [ 'abc' ],
+                      'bar' => [ '123' ],
+                      'baz' => [ 'sea', 'power' ]
+                    }
+      ).each do |result|
+  puts result['foo']
+  puts result['bar']
+  puts result['baz']
+end
+```
+_where:_
+_- `:index` is of name of the index on the Chef server against which the search query will run: `:client`, `:data_bag_name`, `:environment`, `:node`, and `:role`_
+_- 'query' is a valid search query against an object on the Chef server_
+_- `:filter_result` defines a Hash of values to be returned_
+
+_For example:_
+
+```
+search(:node, 'role:web',
+  :filter_result => { 'name' => [ 'name' ],
+                      'ip' => [ 'ipaddress' ],
+                      'kernel_version' => [ 'kernel', 'version' ]
+                    }
+      ).each do |result|
+  puts result['name']
+  puts result['ip']
+  puts result['kernel_version']
+end
+```
+
  - Selecting attributes to be returned
+
+_Use :filter\_result as part of a search query to filter the search output based on the pattern specified by a Hash. Only attributes in the Hash will be returned._
 
 # CHEF SOLO 
 
 ## WHAT CHEF SOLO IS
 _Candidates should understand:_
  - Advantages & disadvantages of Chef-solo vs Chef Server
+
+_chef-solo is a command that executes chef-client in a way that does not require the Chef server in order to converge cookbooks. chef-solo uses chef-client’s Chef local mode, and does not support the following functionality present in chef-client / server configurations:_
+
+_- Centralized distribution of cookbooks_
+_- A centralized API that interacts with and integrates infrastructure components_
+_- Authentication or authorization_
+
  - Chef-solo executable and options
+```
+chef-solo OPTION VALUE OPTION VALUE ...
+```
+_lots of options found here https://docs.chef.io/chef\_solo.html_
+
  - Cookbooks, nodes and attributes
+
+_chef-solo supports two locations from which cookbooks can be run:
+_- A local directory._
+_- A URL at which a tar.gz archive is located._
+
+_Unlike chef-client, where the node object is stored on the Chef server, chef-solo stores its node objects as JSON files on local disk. By default, chef-solo stores these files in a nodes folder in the same directory as your cookbooks directory. You can control the location of this directory via the node_path value in your configuration file._
+
+_chef-solo does not interact with the Chef server. Consequently, node-specific attributes must be located in a JSON file on the target system, a remote location (such as Amazon Simple Storage Service (S3)), or a web server on the local network._
+
  - Using Data Bags, Roles & Environments
+
+_chef-solo will look for data bags in /var/chef/data_bags, but this location can be modified by changing the setting in solo.rb._ `data_bag_path '/var/chef-solo/data_bags'`
+
+_chef-solo will look for roles in /var/chef/roles, but this location can be modified by changing the setting for role_path in solo.rb._ `role_path '/var/chef-solo/roles'`
+
+_chef-solo will look for environments in /var/chef/environments, but this location can be modified by changing the setting for environment_path in solo.rb._ `environment_path '/var/chef-solo/environments'`
+
  - Chef-solo run intervals
- - Retreiving cookbooks from remote locations
+
+```
+-i SECONDS, --interval SECONDS
+```
+_The frequency (in seconds) at which the chef-client runs. When the chef-client is run at intervals, `--splay` and `--interval` values are applied before the chef-client run._
+
+ - Retrieving cookbooks from remote locations
+
+```
+-r RECIPE_URL, --recipe-url RECIPE_URL
+```
+_The URL location from which a remote cookbook tar.gz is to be downloaded._
+
  - Chef-solo and node object
 
 # DATA BAGS 
@@ -391,16 +534,78 @@ _Candidates should understand:_
 ## WHAT IS A DATA_BAG
 _Candidates should understand:_
  - When might you use a data_bag?
+
+_A data bag is a global variable that is stored as JSON data and is accessible from a Chef server. A data bag is indexed for searching and can be loaded by a recipe or accessed during a search. It is used when different clients need to access the same information._
+
  - Indexing data_bags
+
+_Any search for a data bag (or a data bag item) must specify the name of the data bag and then provide the search query string that will be used during the search. For example, to use knife to search within a data bag named “admin\_data” across all items, except for the “admin\_users” item, enter the following:_
+```
+knife search admin_data "(NOT id:admin_users)"
+```
+_Or, to include the same search query in a recipe, use a code block similar to:_
+```
+search(:admin_data, "NOT id:admin_users")
+```
+_Data bags can be accessed through the search indexes. Use this approach when more than one data bag item is required or when the contents of a data bag are looped through. The search indexes will bulk-load all of the data bag items, which will result in a lower overhead than if each data bag item were loaded by name._
+
+_To load the secret from a file:_
+```
+data_bag_item('bag', 'item', IO.read('secret_file'))
+```
+_To load a single data bag item named admins:_
+
+```
+data_bag('admins')
+```
+_The contents of a data bag item named justin:_
+```
+data_bag_item('admins', 'justin')
+```
+
  - What is a data_bag?
+
+_A data bag is a global variable that is stored as JSON data and is accessible from a Chef server. A data bag is indexed for searching and can be loaded by a recipe or accessed during a search._
+
  - Data_bag and Chef-solo
+
+_chef-solo can load data from a data bag as long as the contents of that data bag are accessible from a directory structure that exists on the same machine as chef-solo. The location of this directory is configurable using the data_bag_path option in the solo.rb file. The name of each sub-directory corresponds to a data bag and each JSON file within a sub-directory corresponds to a data bag item. Search is not available in recipes when they are run with chef-solo; use the data_bag() and data_bag_item() functions to access data bags and data bag items._
 
 ## DATA_BAG ENCRYPTION
 _Candidates should understand:_
  - How do you encrypt a data_bag
+
+_A data bag item is encrypted using a knife command similar to:_
+```
+knife data bag create passwords mysql --secret-file /tmp/my_data_bag_key
+```
+_where “passwords” is the name of the data bag, “mysql” is the name of the data bag item, and “/tmp/my_data_bag_key” is the path to the location in which the file that contains the secret-key is located. knife will ask for user credentials before the encrypted data bag item is saved._
+
  - What is Chef Vault
+
+_chef-vault is a RubyGems package that is included in the Chef development kit. chef-vault allows the encryption of a data bag item by using the public keys of a list of nodes, allowing only those nodes to decrypt the encrypted values. chef-vault uses the knife vault subcommand._
 
 ## USING DATA_BAGS
 _Candidates should understand:_
  - How do you create a data_bag?
+
+_knife can be used to create data bags and data bag items when the knife data bag subcommand is run with the create argument. For example:_
+
+```
+knife data bag create DATA_BAG_NAME (DATA_BAG_ITEM)
+```
+_knife can be used to update data bag items using the from file argument:_
+```
+knife data bag from file BAG_NAME ITEM_NAME.json
+```
+_As long as a file is in the correct directory structure, knife will be able to find the data bag and data bag item with only the name of the data bag and data bag item. For example:_
+
+```knife data bag from file BAG_NAME ITEM_NAME.json
+```
+
  - How can you edit a data_bag
+
+_Continuing the example above, if you are in the “admins” directory and make changes to the file charlie.json, then to upload that change to the Chef server use the following command:_
+```
+knife data bag from file admins charlie.json
+```
