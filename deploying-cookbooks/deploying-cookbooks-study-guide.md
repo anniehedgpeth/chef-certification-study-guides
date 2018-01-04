@@ -362,28 +362,81 @@ _Candidates should understand:_
 ## BOOTSTRAP OPTIONS
 _Candidates should understand:_
  - Validator' vs 'Validatorless' Bootstraps
- - Bootstrapping in FIPS mode, 
- - What are Custom Templates 
+
+_The ORGANIZATION-validator.pem is typically added to the .chef directory on the workstation. When a node is bootstrapped from that workstation, the ORGANIZATION-validator.pem is used to authenticate the newly-created node to the Chef server during the initial chef-client run. Starting with Chef client 12.1, it is possible to bootstrap a node using the USER.pem file instead of the ORGANIZATION-validator.pem file. This is known as a “validatorless bootstrap”._
+
+ - Bootstrapping in FIPS mode, https://docs.chef.io/fips.html
+
+_If you have FIPS compliance enabled at the kernel level then chef-client will default to running in FIPS mode. Otherwise you can add `fips true` to the `/etc/chef/client.rb` or `C:\\chef\\client.rb.`_
+
+_Bootstrap a node using FIPS_
+```
+knife bootstrap 192.0.2.0 -P vanilla -x root -r 'recipe[apt],recipe[xfs],recipe[vim]' --fips
+```
+
+ - What are Custom Templates
+
+https://docs.chef.io/knife_bootstrap.html#custom-templates
+_The default `chef-full` template uses the omnibus installer. For most bootstrap operations, regardless of the platform on which the target node is running, using the `chef-full` distribution is the best approach for installing the chef-client on a target node. In some situations, a custom template may be required._
 
 ## UNATTENDED INSTALLS 
 _Candidates should understand:_
  - Configuring Unattended Installs
+
+_The method used to inject a user data script into a server will vary depending on the infrastructure platform being used. For example, on AWS you can pass this data in as a text file using the command line tool._ https://docs.chef.io/install_bootstrap.html#bootstrapping-with-user-data
+
  - What conditions must exists for unattended install to take place?
+
+_It is important that settings in the `client.rb` file —`chef_server_url`, `http_proxy`, and so on are used—to ensure that configuration details are built into the unattended bootstrap process._
+
 
 ## FIRST CHEF-CLIENT RUN
 _Candidates should understand:_
- - How does authentication work during the first chef-client run?
+ - How does authentication work during the first chef-client run? (see next question)
  - What is ‘ORGANIZATION-validator.pem’ file and when is it used?
+ 
+_During the first chef-client run, the private key `/etc/chef/client.pem` does not exist. Instead, the `chef-client` will attempt to use the private key assigned to the `chef-validator`, located in `/etc/chef/validation.pem`. (If, for any reason, the `chef-validator` is unable to make an authenticated request to the Chef server, the initial `chef-client` run will fail.) During the initial `chef-client` run, the `chef-client` will register with the Chef server using the private key assigned to the `chef-validator`, after which the `chef-client` will obtain a `client.pem` private key for all future authentication requests to the Chef server._
+ 
  - What is the ‘first-boot.json’ file?
+
+_Start the chef-client run:_
+_On UNIX- and Linux-based machines: The second shell script executes the `chef-client` binary with a set of initial settings stored within `first-boot.json` on the node. `first-boot.json` is generated from the workstation as part of the initial `knife bootstrap` subcommand._
+
+_On Microsoft Windows machines: The batch file that is derived from the `windows-chef-client-msi.erb` bootstrap template executes the `chef-client` binary with a set of initial settings stored within `first-boot.json` on the node. `first-boot.json` is generated from the workstation as part of the initial `knife bootstrap` subcommand._
 
 # POLICY FILES 
 
 ## BASIC KNOWLEDGE AND USAGE
 _Candidates should understand:_
- - What are policy files, and what problems do they solve?
- - Policy file use cases?
+ - What are policyfiles, and what problems do they solve?
+
+_A Policyfile is an optional way to manage role, environment, and community cookbook data with a single document that is uploaded to the Chef server. The file is associated with a group of nodes, cookbooks, and settings. When these nodes perform a Chef client run, they utilize recipes specified in the Policyfile run-list._
+
+_For some users of Chef, Policyfile will make it easier to test and promote code safely with a simpler interface. Policyfile improves the user experience and resolves real-world problems that some workflows built around Chef must deal with. The following sections discuss in more detail some of the good reasons to use Policyfile, including:_
+
+_- Focus the workflow on the entire system_
+_- Safer development workflows_
+_- Less expensive computation_
+_- Code visibility_
+_- Role mutability_
+_- Cookbook mutability_
+_- Replaces Berkshelf and the environment cookbook pattern_
+
+ - Policyfile use cases?
+
+_When there is not a need for environments or roles._
+
  - What can/not be configured in a policy file?
+
+_roles and environments_
+
  - Policy files and Chef Workflow
+
+_Focused System Workflows: The knife command line tool maps very closely to the Chef server API and the objects defined by it: roles, environments, run-lists, cookbooks, data bags, nodes, and so on. The chef-client assembles these pieces at run-time and configures a host to do useful work._
+
+_Policyfile focuses that workflow onto the entire system, rather than the individual components. For example, Policyfile describes whole systems, whereas each individual revision of the Policyfile.lock.json file uploaded to the Chef server describes a part of that system, inclusive of roles, environments, cookbooks, and the other Chef server objects necessary to configure that part of the system._
+
+_Safer Workflows: Policyfile encourages safer workflows by making it easier to publish development versions of cookbooks to the Chef server without the risk of mutating the production versions and without requiring a complicated versioning scheme to work around cookbook mutability issues. Roles are mutable and those changes are applied only to the nodes specified by the policy. Policyfile does not require any changes to your normal workflows. Use the same repositories you are already using, the same cookbooks, and workflows. Policyfile will prevent an updated cookbook or role from being applied immediately to all machines._
 
 # SEARCH 
 
