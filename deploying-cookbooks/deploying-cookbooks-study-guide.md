@@ -258,7 +258,15 @@ end
 ## ATTRIBUTE PRECEDENCE AND COOKBOOK CONSTRAINTS
 _Candidates should understand:_
  - What attribute precedence levels are available for Environments
+
+https://docs.chef.io/roles.html#attribute-precedence
+
+_`default` and `override`
+
  - Overriding Role attributes
+
+`override` _Applying environment override attributes after role override attributes allows the same role to be used across multiple environments, yet ensuring that values can be set that are specific to each environment (when required)._
+
  - Syntax for setting cookbook constraints.
  - How would you allow only patch updates to a cookbook within an environment?
 
@@ -286,7 +294,14 @@ _Candidates should understand:_
 ## SETTING ATTRIBUTES AND ATTRIBUTE PRECEDENCE
 _Candidates should understand:_
  - What attribute precedence levels are available for Roles
+
+https://docs.chef.io/roles.html#attribute-precedence
+
+_`default` and `override`
+
  - Setting attribute precedence
+
+_The attribute precedence order for roles and environments is reversed for `default` and `override` attributes. The precedence order for `default` attributes is environment, then role. The precedence order for `override` attributes is role, then environment. Applying environment `override` attributes after role `override` attributes allows the same role to be used across multiple environments, yet ensuring that values can be set that are specific to each environment (when required). For example, the role for an application server may exist in all environments, yet one environment may use a database server that is different from other environments._
 
 ## BASE ROLE & NESTED ROLES
 _Candidates should understand:_
@@ -337,27 +352,107 @@ _Candidates should understand:_
 ## KNIFE PLUGINS
 _Candidates should understand:_
  - Common knife plugins
+
+_Knife functionality can be extended with plugins, which work the same as built-in subcommands (including common options). Knife plugins have been written to interact with common cloud providers, to simplify common Chef tasks, and to aid in Chef workflows._ `chef gem install PLUGIN_NAME`
+
+```
+knife-acl
+knife-azure
+knife-ec2
+knife-eucalyptus
+knife-google
+knife-linode
+knife-lpar
+knife-openstack
+knife-push
+knife-rackspace
+knife-vcenter
+knife-windows
+```
+
  - What is 'knife ec2' plugin
- - What is 'knife windows' plugin
+
+_The knife ec2 subcommand is used to manage API-driven cloud servers that are hosted by Amazon EC2. ex:_ `knife ec2 server create -r 'role[webserver]' -I ami-cd0fd6be -f t2.micro --aws-access-key-id 'Your AWS Access Key ID' --aws-secret-access-key "Your AWS Secret Access Key"`
+
+ - What is `knife windows` plugin
+
+_The `knife windows` subcommand is used to configure and interact with nodes that exist on server and/or desktop machines that are running Microsoft Windows. Nodes are configured using WinRM, which allows native objects—batch scripts, Windows PowerShell scripts, or scripting library variables—to be called by external applications. The `knife windows` subcommand supports NTLM and Kerberos methods of authentication. ex:_ `knife bootstrap windows winrm web1.cloudapp.net -r 'server::web' -x 'proddomain\webuser' -P 'password'`
+
+ 
  - What is ‘knife block’ plugin?
+
+https://github.com/knife-block/knife-block
+
+_The `knife block` plugin has been created to enable the use of multiple knife.rb files against multiple chef servers. The premise is that you have a "block" in which you store all your "knives" and you can choose the one best suited to the task. Knife looks for `knife.rb` in `~/.chef` - all this script does is create a symlink from the required configuration to knife.rb so that knife can act on the appropriate server. ex:_ `knife block use <server_name>`
+
  - What is ‘knife spork’ plugin?
+
+_The `knife-spork` plugin adds workflow that enables multiple developers to work on the same Chef server and repository, but without stepping on each other’s toes. This plugin is designed around the workflow at Etsy, where several people work in the same repository and Chef server simultaneously. ex:_ `knife spork bump`
+
  - Installing knife plugins
+```
+chef gem install PLUGIN_NAME
+```
 
 ## TROUBLESHOOTING
 _Candidates should understand:_
  - Troubleshooting Authentication
  - Using `knife ssl check` command
+
+_Use the `knife ssl check` subcommand to verify the SSL configuration for the Chef server or a location specified by a URL or URI. Invalid certificates will not be used by OpenSSL. When this command is run, the certificate files (`*.crt` and/or `*.pem`) that are located in the `/.chef/trusted_certs` directory are checked to see if they have valid X.509 certificate properties. A warning is returned when certificates do not have valid X.509 certificate properties or if the `/.chef/trusted_certs` directory does not contain any certificates._ `knife ssl check (options)`
+
  - Using `knife ssl fetch` command
+
+_Run the `knife ssl fetch` to download the self-signed certificate from the Chef server to the `/.chef/trusted_certs` directory on a workstation._
+
  - Using '-VV' flag
+
+`-V`, `--verbose` Set for more verbose outputs. Use `-VV` for maximum verbosity.
+
  - Setting log levels and log locations
+
+_Use the log resource to create log entries. The log resource behaves like any other resource: built into the resource collection during the compile phase, and then run during the execution phase. (To create a log entry that is not built into the resource collection, use `Chef::Log` instead of the log resource.)_
+
+```
+log 'message' do
+  message 'A message add to the log.'
+  level :info
+end
+```
+
+_Log Level	Syntax_
+`Fatal`	`Chef::Log.fatal('string')`
+`Error`	`Chef::Log.error('string')`
+`Warn`	`Chef::Log.warn('string')`
+`Info`	`Chef::Log.info('string')`
+`Debug`	`Chef::Log.debug('string')`
 
 # BOOTSTRAPPING 
 
 ## USING KNIFE
 _Candidates should understand:_
- - Common ‘knife bootstrap’ options - UserName, Password, RunList, and Environment
+ - Common `knife bootstrap` options - UserName, Password, RunList, and Environment
+
+`-x USERNAME`, `--ssh-user USERNAME` - _The SSH user name._
+
+`-P PASSWORD`, `--ssh-password PASSWORD` - _The SSH password. This can be used to pass the password directly on the command line. If this option is not specified (and a password is required) knife prompts for the password._
+
+`-r RUN_LIST`, `--run-list RUN_LIST` - _A comma-separated list of roles and/or recipes to be applied._
+
+`-E ENVIRONMENT`, `--environment ENVIRONMENT` - _The name of the environment. When this option is added to a command, the command will run only against the named environment._
+
  - Using `winrm` & `ssh`
+
+_WINRM: Use the winrm argument to create a connection to one or more remote machines. As each connection is created, a password must be provided. This argument uses the same syntax as the search subcommand. WinRM requires that a target node be accessible via the ports configured to support access via HTTP or HTTPS._ `knife winrm SEARCH_QUERY SSH_COMMAND (options)`
+
+_SSH: Use the knife ssh subcommand to invoke SSH commands (in parallel) on a subset of nodes within an organization, based on the results of a search query made to the Chef server._ `knife ssh SEARCH_QUERY SSH_COMMAND (options)`
+
  - Using knife plugins for bootstrap - `knife ec2 ..`, `knife bootstrap windows ...`
+
+`knife ec2 server create`
+
+_Use the `bootstrap windows winrm` argument to bootstrap chef-client installations in a Microsoft Windows environment, using WinRM and the WS-Management protocol for communication. This argument requires the FQDN of the host machine to be specified. The Microsoft Installer Package (MSI) run silently during the bootstrap operation (using the /qn option). ex:_ `knife bootstrap windows winrm FQDN`
+
 
 ## BOOTSTRAP OPTIONS
 _Candidates should understand:_
