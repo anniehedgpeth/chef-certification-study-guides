@@ -115,9 +115,37 @@ updated_resources
 
 _The start of the chef-client run_
 
+`node.run_state`
+Use `node.run_state` to stash transient data during a `chef-client` run. This data may be passed between resources, and then evaluated during the *execution* phase. `run_state` is an empty Hash that is always discarded at the end of the `chef-client` run.
+
+```
+package 'httpd' do
+  action :install #installs the Apache web server
+end
+
+ruby_block 'randomly_choose_language' do
+  block do
+    if Random.rand > 0.5  #randomly choose PHP or Perl as the scripting language
+      node.run_state['scripting_language'] = 'php'
+    else
+      node.run_state['scripting_language'] = 'perl'
+    end
+  end
+end
+
+package 'scripting_language' do  # install that scripting language
+  package_name lazy { node.run_state['scripting_language'] } # lazy ensures that it evaluates this during execution, not compile
+  action :install
+end
+```
+
  - What is the ‘resource collection’?
 
 _During the compile phase of the `chef-client` run, when it is loading all of the cookbooks, all of the resources are compiled and set to run in order._
+
+ ResourceCollection currently handles two tasks:
+1) Keeps an ordered list of resources to use when converging the node
+2) Keeps a unique list of resources (keyed as `type[name]`) used for notifications
 
 ## AUTHENTICATION
 _Candidates should understand:_
