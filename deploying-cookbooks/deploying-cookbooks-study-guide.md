@@ -344,8 +344,10 @@ end
 `knife-whisk` - Adds the ability to create new servers in a team environment.
 
  - Bootstrapping a node into a particular Environment
-```knife bootstrap <IPorFQDN> --run-list 'cookbook::default' --environment 'dev' -x 'annie' -i '~/.ssh/id_rsa' --
-sudo -N 'prep-node'```
+```
+knife bootstrap <IPorFQDN> --run-list 'cookbook::default' --environment 'dev' -x 'annie' -i '~/.ssh/id_rsa' --
+sudo -N 'prep-node'
+```
 
 # ROLES
 
@@ -453,9 +455,45 @@ chef_server_url          "https://api.chef.io/organizations/orgname"
 cookbook_path            ["#{current_dir}/../cookbooks"]
 ```
  - Setting the chef-client version to be installed during bootstrap
+```$ knife bootstrap FQDN_or_IP_ADDRESS (options)
+```
+`--bootstrap-version VERSION` - The version of the chef-client to install.
+
  - Setting defaults for command line options in knife’s configuration file
+To add settings to the `knife.rb` file, use the following syntax:
+```
+knife[:setting_name] = value
+```
+where value may require quotation marks (‘ ‘) if that value is a string. For example:
+```
+knife[:ssh_port] = 22
+knife[:bootstrap_template] = 'ubuntu14.04-gems'
+knife[:bootstrap_version] = ''
+knife[:bootstrap_proxy] = ''
+```
  - Using environment variables and sharing knife configuration file with your team
+Add environment variables to the `knife.rb` and share the file among your team. For example:
+```
+current_dir = File.dirname(__FILE__)
+  user = ENV['OPSCODE_USER'] || ENV['USER']
+  node_name                user
+  client_key               "#{ENV['HOME']}/chef-repo/.chef/#{user}.pem"
+  validation_client_name   "#{ENV['ORGNAME']}-validator"
+  validation_key           "#{ENV['HOME']}/chef-repo/.chef/#{ENV['ORGNAME']}-validator.pem"
+  chef_server_url          "https://api.opscode.com/organizations/#{ENV['ORGNAME']}"
+  syntax_check_cache_path  "#{ENV['HOME']}/chef-repo/.chef/syntax_check_cache"
+  cookbook_path            ["#{current_dir}/../cookbooks"]
+  cookbook_copyright       "Your Company, Inc."
+  cookbook_license         "apachev2"
+  cookbook_email           "cookbooks@yourcompany.com"
+
+  # Amazon AWS
+  knife[:aws_access_key_id] = ENV['AWS_ACCESS_KEY_ID']
+  knife[:aws_secret_access_key] = ENV['AWS_SECRET_ACCESS_KEY']
+```
+
  - Managing proxies
+In an environment that requires proxies to reach the Internet, many Chef commands will not work until they are configured correctly. To configure Chef to work in an environment that requires proxies, set the `http_proxy`, `https_proxy`, `ftp_proxy`, and/or `no_proxy` environment variables to specify the proxy settings using a lowercase value.
 
 ## KNIFE PLUGINS
 _Candidates should understand:_
@@ -486,7 +524,7 @@ _The knife ec2 subcommand is used to manage API-driven cloud servers that are ho
 
 _The `knife windows` subcommand is used to configure and interact with nodes that exist on server and/or desktop machines that are running Microsoft Windows. Nodes are configured using WinRM, which allows native objects—batch scripts, Windows PowerShell scripts, or scripting library variables—to be called by external applications. The `knife windows` subcommand supports NTLM and Kerberos methods of authentication. ex:_ `knife bootstrap windows winrm web1.cloudapp.net -r 'server::web' -x 'proddomain\webuser' -P 'password'`
 
- 
+
  - What is ‘knife block’ plugin?
 
 https://github.com/knife-block/knife-block
