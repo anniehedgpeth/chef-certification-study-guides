@@ -205,7 +205,7 @@ _Candidates should understand:_
  - What is the purpose of `why-run`
 
 ` -W`, `--why-run`
-Use why-run mode to understand why the chef-client makes the decisions that it makes and to learn more about the current and proposed state of the system.
+A type of `chef-client` run that does everything except modify the system. Use why-run mode to understand why the chef-client makes the decisions that it makes and to learn more about the current and proposed state of the system.
 
  - How do you invoke a ‘why-run’
 
@@ -213,7 +213,7 @@ Use why-run mode to understand why the chef-client makes the decisions that it m
 
  - What are limitations of doing a why run?
 
-A type of `chef-client` run that does everything except modify the system
+Because it is not modifying the system, the notifications are not accurate since certain resources don't get triggered from them.
 
 # ENVIRONMENTS 
 
