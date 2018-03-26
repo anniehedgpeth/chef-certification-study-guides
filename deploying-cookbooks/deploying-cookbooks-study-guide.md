@@ -296,16 +296,56 @@ _`default` and `override`
 `override` _Applying environment override attributes after role override attributes allows the same role to be used across multiple environments, yet ensuring that values can be set that are specific to each environment (when required)._
 
  - Syntax for setting cookbook constraints.
+```
+  "cookbook_versions": {
+    "couchdb": "= 11.0.0"
+  },
+  ```
  - How would you allow only patch updates to a cookbook within an environment?
+```
+  "cookbook_versions": {
+    "couchdb": "~> 11.0.0"
+  },
+  ```
 
 ## SETTING AND VIEWING ENVIRONMENTS
 _Candidates should understand:_
  - How can you list Environments?
+```
+$ knife environment list
+```
  - How can you move a node to a specific Environment?
+```
+$ knife node environment_set NODE_NAME ENVIRONMENT_NAME (options)
+```
  - Using `knife exec` to bulk change Environments.
+```
+knife exec -E "nodes.transform(“chef_environment:dev“) \
+  {|n| puts n.run_list.remove(“recipe[chef-client::upgrade]“); n.save }"
+```
  - Using 'chef_environment' global variable in recipes
+```
+if node.chef_environment == "dev"
+  # stuff
+end
+```
  - Environment specific knife plugins, e.g. `knife flip`
+
+`knife-flip` - A knife plugin to move a node, or all nodes in a role, to a specific environment
+
+`knife-bulkchangeenv` - A plugin for Chef::Knife which lets you move all nodes in one environment into another.
+
+`knife-env-diff` - Adds the ability to diff the cookbook versions for two (or more) environments.
+
+`knife-set-environment` - Adds the ability to set a node environment.
+
+`knife-spork` - Adds a simple environment workflow so that teams can more easily work together on the same cookbooks and environments.
+
+`knife-whisk` - Adds the ability to create new servers in a team environment.
+
  - Bootstrapping a node into a particular Environment
+```knife bootstrap <IPorFQDN> --run-list 'cookbook::default' --environment 'dev' -x 'annie' -i '~/.ssh/id_rsa' --
+sudo -N 'prep-node'```
 
 # ROLES
 
@@ -314,10 +354,16 @@ _Candidates should understand:_
  - What is the purpose of a Role?
  - Creating Roles
  - Role Ruby & JSON DSL formats
- - Pros and Cons of Roles 
+ - Pros and Cons of Roles
+Pros - one team can have some control over adding their specific run-lists.
+Cons - That team's run-list could mess with everyone else's stuff.
+
  - The Role cookbook pattern
+Wrappers
+
  - Creating Role cookbooks
  - Using Roles within a search
+`knife search role '*:*'`
 
 ## SETTING ATTRIBUTES AND ATTRIBUTE PRECEDENCE
 _Candidates should understand:_
@@ -363,15 +409,49 @@ _Candidates should understand:_
 ## BASIC KNIFE USAGE
 _Candidates should understand:_
  - How does knife know what Chef Server to interact with?
+from the chef server url in the `knife.rb`
+
  - How does knife authenticate with Chef Server
+with a validator key (user.pem or org.pem)
+
  - How/When would you use `knife ssh` & `knife winrm`?
+Use the knife ssh subcommand to invoke SSH commands (in parallel) on a subset of nodes within an organization, based on the results of a search query made to the Chef server. For example:
+```
+$ knife ssh "role:webserver" "sudo chef-client"
+```
  - Verifying ssl certificate authenticity using knife
+The  SSL certificates that are used by the chef-client may be verified by specifying the path to the client.rb file. Use the --config option (that is available to any knife command) to specify this path:
+```
+$ knife ssl check --config /etc/chef/client.rb
+```
+Verify an external server’s SSL certificate
+```
+$ knife ssl check URL_or_URI
+```
+for example:
+```
+$ knife ssl check https://www.chef.io
+```
  - Where can/should you run the `knife` command from?
+from anywhere in the chef repo of your desired org
 
 ## KNIFE CONFIGURATION
 _Candidates should understand:_
  - How/where do you configure knife?
+in the `.chef/knife.rb`
+
  - Common options - cookbook_path, validation_key, chef_server_url, validation_key
+```
+# See http://docs.chef.io/config_rb_knife.html for more information on knife configuration options
+
+current_dir = File.dirname(__FILE__)
+log_level                :info
+log_location             STDOUT
+node_name                "nodename"
+client_key               "#{current_dir}/user.pem"
+chef_server_url          "https://api.chef.io/organizations/orgname"
+cookbook_path            ["#{current_dir}/../cookbooks"]
+```
  - Setting the chef-client version to be installed during bootstrap
  - Setting defaults for command line options in knife’s configuration file
  - Using environment variables and sharing knife configuration file with your team
