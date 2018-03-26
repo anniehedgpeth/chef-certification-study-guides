@@ -686,9 +686,13 @@ _Candidates should understand:_
  - What information is indexed and available for search?
 
 _- client_
+
 _- environment_
+
 _- node_
+
 _- role_
+
 _- data bag_
 
  - Search operators and query syntax
