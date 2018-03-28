@@ -342,7 +342,7 @@ end
 
 `knife-set-environment` - _Adds the ability to set a node environment._
 
-`knife-spork` - _Adds a simple environment workflow so that teams can more easily work together on the same cookbooks and environments.
+`knife-spork` - _Adds a simple environment workflow so that teams can more easily work together on the same cookbooks and environments._
 
 `knife-whisk` - _Adds the ability to create new servers in a team environment._
 
