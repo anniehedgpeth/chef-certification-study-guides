@@ -269,8 +269,10 @@ _The JSON format for environments maps directly to the domain-specific Ruby form
 }
 ```
 _The JSON format has two additional settings:_
-`chef_type`	_Always set this to environment. Use this setting for any custom process that consumes environment objects outside of Ruby._
-`json_class`	_Always set this to Chef::Environment. The chef-client uses this setting to auto-inflate an environment object. If objects are being rebuilt outside of Ruby, ignore it._
+
+`chef_type`  _Always set this to environment. Use this setting for any custom process that consumes environment objects outside of Ruby._
+
+`json_class`  _Always set this to Chef::Environment. The chef-client uses this setting to auto-inflate an environment object. If objects are being rebuilt outside of Ruby, ignore it._
 
  - Using environments within a search
 
