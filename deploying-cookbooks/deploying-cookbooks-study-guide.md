@@ -334,17 +334,17 @@ end
 ```
  - Environment specific knife plugins, e.g. `knife flip`
 
-`knife-flip` - A knife plugin to move a node, or all nodes in a role, to a specific environment
+`knife-flip` - _A knife plugin to move a node, or all nodes in a role, to a specific environment__
 
-`knife-bulkchangeenv` - A plugin for Chef::Knife which lets you move all nodes in one environment into another.
+`knife-bulkchangeenv` - _A plugin for Chef::Knife which lets you move all nodes in one environment into another._
 
-`knife-env-diff` - Adds the ability to diff the cookbook versions for two (or more) environments.
+`knife-env-diff` - _Adds the ability to diff the cookbook versions for two (or more) environments._
 
-`knife-set-environment` - Adds the ability to set a node environment.
+`knife-set-environment` - _Adds the ability to set a node environment._
 
-`knife-spork` - Adds a simple environment workflow so that teams can more easily work together on the same cookbooks and environments.
+`knife-spork` - _Adds a simple environment workflow so that teams can more easily work together on the same cookbooks and environments.
 
-`knife-whisk` - Adds the ability to create new servers in a team environment.
+`knife-whisk` - _Adds the ability to create new servers in a team environment._
 
  - Bootstrapping a node into a particular Environment
 ```
