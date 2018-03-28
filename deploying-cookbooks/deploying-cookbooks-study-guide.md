@@ -116,7 +116,7 @@ updated_resources
 _The start of the chef-client run_
 
 `node.run_state`
-Use `node.run_state` to stash transient data during a `chef-client` run. This data may be passed between resources, and then evaluated during the *execution* phase. `run_state` is an empty Hash that is always discarded at the end of the `chef-client` run.
+_Use `node.run_state` to stash transient data during a `chef-client` run. This data may be passed between resources, and then evaluated during the *execution* phase. `run_state` is an empty Hash that is always discarded at the end of the `chef-client` run._
 
 ```
 package 'httpd' do
@@ -143,9 +143,9 @@ end
 
 _During the compile phase of the `chef-client` run, when it is loading all of the cookbooks, all of the resources are compiled and set to run in order._
 
- ResourceCollection currently handles two tasks:
-1) Keeps an ordered list of resources to use when converging the node
-2) Keeps a unique list of resources (keyed as `type[name]`) used for notifications
+_ResourceCollection currently handles two tasks:_
+_1) Keeps an ordered list of resources to use when converging the node_
+_2) Keeps a unique list of resources (keyed as `type[name]`) used for notifications_
 
 ## AUTHENTICATION
 _Candidates should understand:_
@@ -205,7 +205,8 @@ _Candidates should understand:_
  - What is the purpose of `why-run`
 
 ` -W`, `--why-run`
-A type of `chef-client` run that does everything except modify the system. Use why-run mode to understand why the chef-client makes the decisions that it makes and to learn more about the current and proposed state of the system.
+
+_A type of `chef-client` run that does everything except modify the system. Use why-run mode to understand why the chef-client makes the decisions that it makes and to learn more about the current and proposed state of the system._
 
  - How do you invoke a ‘why-run’
 
@@ -213,7 +214,7 @@ A type of `chef-client` run that does everything except modify the system. Use w
 
  - What are limitations of doing a why run?
 
-Because it is not modifying the system, the notifications are not accurate since certain resources don't get triggered from them.
+_Because it is not modifying the system, the notifications are not accurate since certain resources don't get triggered from them._
 
 # ENVIRONMENTS 
 
