@@ -901,7 +901,8 @@ knife data bag from file BAG_NAME ITEM_NAME.json
 ```
 _As long as a file is in the correct directory structure, knife will be able to find the data bag and data bag item with only the name of the data bag and data bag item. For example:_
 
-```knife data bag from file BAG_NAME ITEM_NAME.json
+```
+knife data bag from file BAG_NAME ITEM_NAME.json
 ```
 
  - How can you edit a data_bag
