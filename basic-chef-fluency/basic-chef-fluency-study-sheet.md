@@ -28,7 +28,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
   - This simply means that this resource will do nothing to the node unless told otherwise.
 
 - The `supports` directive
-  - The `supports` directive specifies the platform that the cookbook supports. This is specified within the cookbook's `metadata.rb`. 
+  - The `supports` directive specifies the platform that the cookbook supports. This is specified within the cookbook's `metadata.rb`.   
 
 - The `not_if` and `only_if` directives
   - You may specify that a resource takes action only if or not if another requirement is met or not met.
@@ -52,6 +52,16 @@ When a node is converged, chef-client first tests to see if the node is in the s
 
 ### The `notifies` and `subscribes` directives
 - A resource can notify another resource of its actions in order for the secondary resource to take action based upon the primary resource's actions. Conversely, a resource can subscribe to another resource to listen for its actions and take action itself based on the actions of the resource to which is it subscribed.
+- In this `subscribes` example nginx subscribes to "file" and the nginx service restarts once an example.crt file exists at the given location. 
+file '/etc/nginx/ssl/example.crt' do
+   mode '0600'
+   owner 'root'
+end
+
+service 'nginx' do
+   subscribes :reload, 'file[/etc/nginx/ssl/example.crt]', :immediately
+end
+	
 
 # COOKBOOKS
 *Candidates should understand:*
@@ -64,6 +74,10 @@ When a node is converged, chef-client first tests to see if the node is in the s
 
 ### Cookbook dependencies
 - You can declare the dependencies of your cookbook on other cookbooks by including those cookbooks in the `metadata.rb` by using `depends '<cookbookname>', 'versionoptional'`. If you're using dependencies that are not stored in source control or the Supermarket, you may use Berks to upload those dependencies to the Chef server from your workstation.
+- This line in our metadata.rb file is referencing a cookbook outside our current cookbook named "apache2"
+depends 'apache2', 'versionoptional'
+- We can then include the recipe "mod_ssl.rb" in our current cookbook's recipe
+include_recipe 'apache2::mod_ssl'
 
 ### The default recipe
 - If there is only one recipe in the cookbook, then this will be called the default recipe. The default recipe is called when the cookbook is listed without a recipe name in a run list.
@@ -85,6 +99,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 
 ### Scalability
 - If the chef-client is on the node being configured, then it scales more easily because a server doesn't have to do all the work. Scaling with High Availabililty (HA) is also an option.
+- Configuring a node instead of a chef server allows the chef server to simply duplicate a configured node instead of having to re-configure a new node every time.
 
 ## SEARCH
 *Candidates should understand:*
@@ -93,7 +108,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 - `knife search` commands can be use to search the Chef server.
 
 ### How to search for node information
-- `knife search node "<index>:<search_query>"` may be invoked or you may search in the Chef server UI (nodes > attributes).
+- `knife search node "index:search_query"` may be invoked or you may search in the Chef server UI (nodes > attributes).
 
 ### [What and how many search indexes Chef server maintains](https://docs.chef.io/chef_search.html)
 - Node data is indexed on the Chef server. That data may be accessed through a search query in any of the following ways:
@@ -104,7 +119,8 @@ When a node is converged, chef-client first tests to see if the node is in the s
  5) by using the `/search` or `/search/INDEX` endpoints in the Chef server API
 
 ### What a databag is
-- A databag is a directory of data that is stored on the Chef server.
+- A databag is a directory of data that is stored on the Chef server. 
+- TutorialPoints explains data bags well: https://www.tutorialspoint.com/chef/chef_data_bags.htm
 
 ### How to use search for dynamic orchestration
 - You would use the `knife search` command to get a list of nodes on which you need to perform actions.
@@ -140,7 +156,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 - A node is the machine that is being configured by the Chef client.
 
 ### What a node object is
-- A node object is data that is given to the Chef server to store by the Chef client after `chef-client` is run which contains OHAI data as well as attributes.
+- A node object is data that is given to the Chef server to store by the Chef client after `chef-client` is run which contains OHAI data as well as attributes. OHAI collects system configuration details such as OS, network, memory, disk, CPU, kernel, host names, and fqdn -- it runs during every chef-client run.
 
 ### How a node object is stored on Chef server
 - A node object is data that is given to the Chef server to store by the Chef client after `chef-client` is run which contains OHAI data as well as attributes.
@@ -181,6 +197,8 @@ When a node is converged, chef-client first tests to see if the node is in the s
   1) Look in the UI under Nodes > Details > Run List > Edit.
   2) After you've insured that your desired cookbooks are uploaded to the Chef server, run `knife node run_list add <nodename> 'recipe[<cookbookname>::<recipe>]'` OR `knife node run_list add chefkata7 'role[security]'`
   3) In the node, look at the `client.rb` file (not best practice).
+- This example adds a recipe named "default.rb" to the run_list on node "centos1"  
+	`knife node run_list add centos1 'recipe[learn_chef_httpd::default]'`
 
 ## ROLES
 *Candidates should understand:*
@@ -220,13 +238,14 @@ When a node is converged, chef-client first tests to see if the node is in the s
 *Candidates should understand:*
 
 ### The purpose of environments
-- Environments are assigned to nodes to determine which phase of the release cycle that node represents. This include but are not limited to development, user acceptance testing, and production. 
+- Environments are assigned to nodes to determine which phase of the release cycle that node represents. These include but are not limited to development, user acceptance testing, and production. 
 
 ### How to use environments to manage cookbook release cycles
 - An environment is assigned to a node in order to give it the appropriate version of the cookbooks in the run_lists. The earlier in the release cycle that the environment assigned to the role is, the later versions of the recipes it will be assigned to.
 
 ### How to use environments to constrain cookbooks
 - Environments are assigned to nodes, and then that node data is returned to the Chef server. You can then use that data within a recipe to constrain attributes to particular environments.
+- A good one-page reference for understanding environments: https://www.tutorialspoint.com/chef/chef_environment.htm
 
 ### How to put nodes into an environment
 - Environments are assigned to nodes through:
@@ -239,7 +258,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 *Candidates should understand:*
 
 ### What the advantages are of defining infrastructure as code
-- If your infrastructure is code, then you know your the state of your infrastructure just by looking at the code. You can then easily alter your configuration and use version control to promote changes easily through development.
+- If your infrastructure is code, then you know the state of your infrastructure just by looking at the code. You can then easily alter your configuration and use version control to promote changes easily through development.
 
 ### The reasons for defining infrastructure as code
 - Scalability
@@ -327,11 +346,11 @@ When a node is converged, chef-client first tests to see if the node is in the s
 - `kitchen test`
  
 ### Basic `kitchen` configuration
-- Driver- What is creating your VM?
+- Driver- What is creating your VM (Vagrant, Amazon, Azure, etc.)?
 - Provisioner- What is running Chef?
 - Verifier- What is running the tests? (probably InSpec)
 - Transport- What are you using to remote to a machine?
-- Suites- What are the machines are you making?
+- Suites- What are the machines you're making?
 - Platform- What OS are you using?
 
 # DESCRIBING WHAT CHEF IS
@@ -348,7 +367,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 
 ### The Chef Automate features
 ### What the workflow feature is and how it affects productivity
-- Workflow is similar to Jenkins or Team City, as it defines and automates the CI/CD pipeline. It affects productivity by promoting the next build in the previous one had passed. You're able to release code faster when the automation process is in charge of promotion. The safeguard of promoting only the builds that pass validation contributes to productivity, as well.
+- Workflow is similar to Jenkins or Team City, as it defines and automates the CI/CD pipeline. It affects productivity by promoting the next build in the previous one had passed. You're able to release code faster when the automation process is in charge of promotion. The safeguard of promoting only the builds that pass validation contributes to productivity as well.
 
 ### What the compliance feature is and how it affects workflow
 - In the same way that workflow adds safeguards which contribute to productivity
@@ -357,13 +376,13 @@ When a node is converged, chef-client first tests to see if the node is in the s
 - It provides insight on how changes affect the state of Chef on the nodes.
  
 ### How a private Supermarket fits into a workflow
-- You create your own server, then you reference your private supermarket in your Berksfile so that Chef server grabs the cookbooks from there.
+- You create your own Chef server and then reference your private supermarket in your Berksfile so that your Chef server grabs the cookbooks from there. The Berksfile handles dependencies such as retrieving cookbooks for use in your recipes from Supermarket. Berksfile is similar different than your metadata.rb file in that the metadata file handles dependencies for chef-client when it's converging nodes, but a Berksfile just pulls cookbooks.  
  
 ### The Chef Automate open source components
 - The open source components of Automate include:
    1) InSpec
    2) Chef
-   3) Habitat
+   3) Habitat - an open-source service that containerizes your apps into isolated, independent environments similar to Docker but created by Chef
  
 ### What Visibility is
 - Visibility is a tool within Chef Automate that allows you to see the state of infrastructure across your entire organization. 
@@ -512,7 +531,7 @@ When a node is converged, chef-client first tests to see if the node is in the s
 *Candidates should understand:*
 
 ### The benefits of the agentless nature of Chef compliance
-- A test is more reliable if nothing is installed on the node being installed because you don't have to change the state of the node being tested; you merely have to inspect it.
+- A test is more reliable if nothing is installed on the node being tested because you don't have to change the state of the node being tested; you merely have to inspect it.
 
 ### How to check for compliance on nodes that don't have the Chef client installed
 - You simply need to be able to have remote access into the node in order for the InSpec framework to use your profile to scan the node being inspected.
